@@ -63,12 +63,14 @@ func DeleteTodo(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var todo models.Todo
 
-	if err := database.DB.Delete(&todo, id).Error; err != nil {
+	if err := database.DB.Where("ID = ?", id).First(&todo).Error; err != nil {
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
 			"message": "Unable to delete with this ID",
 		})
 	}
+
+	database.DB.Delete(&todo, id)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Successfully Deleted",
@@ -88,12 +90,14 @@ func UpdateTodo(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := database.DB.Where("ID=?", id).Find(&todo).Updates(&todo).Error; err != nil {
+	if err := database.DB.Where("ID = ?", id).First(&todo).Error; err != nil {
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
 			"message": "Unable to update data with this ID",
 		})
 	}
+
+	database.DB.Updates(&todo)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Successfully Updated",
