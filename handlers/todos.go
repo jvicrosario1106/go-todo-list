@@ -80,10 +80,17 @@ func DeleteTodo(c *fiber.Ctx) error {
 
 func UpdateTodo(c *fiber.Ctx) error {
 
+	type updateTodoData struct {
+		Title string `json:"title"`
+	}
+
 	todo := new(models.Todo)
 	id := c.Params("id")
 
-	if err := c.BodyParser(todo); err != nil {
+	//store struct type request body to variable
+	var updateData updateTodoData
+
+	if err := c.BodyParser(&updateData); err != nil {
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
 			"message": "Failed to Update",
@@ -93,11 +100,13 @@ func UpdateTodo(c *fiber.Ctx) error {
 	if err := database.DB.Where("ID = ?", id).First(&todo).Error; err != nil {
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
-			"message": "Unable to update data with this ID",
+			"message": "No data with this ID",
 		})
 	}
 
-	database.DB.Updates(&todo)
+	todo.Title = updateData.Title
+
+	database.DB.Save(&todo)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Successfully Updated",
